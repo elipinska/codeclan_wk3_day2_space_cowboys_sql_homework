@@ -7,7 +7,7 @@ attr_reader :id
   def initialize(options)
     @name = options['name']
     @species = options['species']
-    @bounty_value = options['bounty_value']
+    @bounty_value = options['bounty_value'].to_i
     @danger_level = options['danger_level']
     @id = options['id']
   end
@@ -60,7 +60,7 @@ attr_reader :id
     values = [@id]
     db.prepare("delete", sql)
     db.exec_prepared("delete", values)
-    db.close() 
+    db.close()
   end
 
   def Bounty.delete_all()
@@ -70,6 +70,39 @@ attr_reader :id
     db.prepare("delete_all", sql)
     all_bounties = db.exec_prepared("delete_all")
     db.close()
+  end
+
+  def Bounty.find_by_name(name)
+    db = PG.connect({dbname: 'bounty_hunters', host: 'localhost'})
+  sql = "SELECT * FROM bounties WHERE name = $1;
+  "
+  values = [name]
+  db.prepare("find_by_name", sql)
+  found_bounty = db.exec_prepared("find_by_name", values)
+  db.close()
+
+  return nil if found_bounty.ntuples == 0
+
+  bounty_objects = found_bounty.map {|bounty| Bounty.new(bounty)}
+
+  return bounty_objects
+  end
+
+
+  def Bounty.find(id)
+    db = PG.connect({dbname: 'bounty_hunters', host: 'localhost'})
+  sql = "SELECT * FROM bounties WHERE id = $1;
+  "
+  values = [id]
+  db.prepare("find", sql)
+  found_bounty = db.exec_prepared("find", values)
+  db.close()
+
+  return nil if found_bounty.ntuples == 0
+
+  bounty_object = Bounty.new(found_bounty.first)
+
+  return bounty_object
   end
 
 
